@@ -1,0 +1,1 @@
+{"functions":[{"name":"handler","arn":"arn:aws:lambda:ap-south-1:482126169017:function:video-share","region":"ap-south-1","entryFile":"lambdas\\putHandler.js"}]}
