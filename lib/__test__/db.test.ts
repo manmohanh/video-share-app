@@ -10,7 +10,8 @@ describe.skip("Test for DB", () => {
 
     const res = await db.save({
       id:"123",
-      userId: "user-123"
+      userId: "user-123",
+      tags:undefined
     })
 
     console.log(res)

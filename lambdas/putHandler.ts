@@ -2,52 +2,47 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import { DB } from "../lib/db";
 import { z } from "zod";
 import { S3 } from "../lib/s3";
-
 import { v4 } from "uuid";
-import { video } from "../entity/Video";
+import { createDoc as createVideoDoc } from "../entity/Video";
+import { withBodyValidation } from "../lib/handlers/api";
 
 const db = new DB({
   tableName: "video-share",
   region: "ap-south-1",
 });
-const s3 = new S3();
-
-const bodySchema = z.object({
-  userId: z.string(),
-  title: z.string(),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+const s3 = new S3({
+  region: "ap-south-1",
+  bucketName: "video-share-app-bucket",
 });
 
-export const handler: APIGatewayProxyHandler = async (e) => {
-  const body = JSON.parse(e.body || "{}");
+export const handler = withBodyValidation({
+  schema: z.object({
+    userId: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+  }),
 
-  try {
-    const { userId, title, description, tags } = bodySchema.parse(body);
-    const videoDoc: z.infer<typeof video> = {
-      id: v4(),
-      userId,
-      title,
-      description,
-      uploadedTime: Date.now(),
-      tags,
-      status: "NOT_UPLOADED",
-    };
+  async handler({ userId, title, description, tags }) {
+    const id = v4();
 
-    await db.save(videoDoc);
-
-    const url = s3.getUploadUrl();
+    await db.save(
+      createVideoDoc({
+        id,
+        userId,
+        title,
+        description,
+        uploadedTime: Date.now(),
+        tags,
+        status: "NOT_UPLOADED",
+      })
+    );
 
     return {
-      statusCode: 200,
-      body: JSON.stringify({
-        uploadUrl: url,
+      uploadUrl: await s3.getUploadUrl({
+        key: id,
+        expiresIn: 60 * 10,
       }),
     };
-  } catch (error) {
-    return {
-      statusCode: 400,
-      body: "validation failed",
-    };
-  }
-};
+  },
+});
