@@ -6,12 +6,12 @@ export class S3 {
 
   constructor(
     private config: {
-      region: string;
-      bucketName: string;
+      region: string
+      bucketName: string
     }
   ) {
     this.client = new S3Client({
-      region: config.region,
+      region: config.region
     });
   }
 

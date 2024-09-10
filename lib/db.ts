@@ -5,18 +5,18 @@ export class DB {
   private client: DynamoDBDocumentClient;
   constructor(
     private config: {
-      tableName: string;
-      region: string;
+      tableName: string
+      region: string
     }
   ) {
     this.client = DynamoDBDocumentClient.from(
       new DynamoDBClient({
-        region: this.config.region,
+        region: this.config.region
       }),
       {
         marshallOptions: {
-          removeUndefinedValues: true,
-        },
+          removeUndefinedValues: true
+        }
       }
     );
   }
@@ -24,7 +24,7 @@ export class DB {
   async save(doc: any) {
     const command = new PutCommand({
       TableName: this.config.tableName,
-      Item: doc,
+      Item: doc
     });
     const res = await this.client.send(command);
     return res;

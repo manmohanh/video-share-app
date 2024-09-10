@@ -10,27 +10,28 @@ export const withBodyValidation = <T extends ZodSchema>({
 }) => {
   const apiGatewayProxyHandler: APIGatewayProxyHandler = async (e) => {
     try {
-      const body = schema.parse(JSON.parse(e.body || ""));
+      const body = schema.parse(JSON.parse(e.body || "{}"));
       const res = await handler(body, e);
       return {
         body: JSON.stringify(res),
         statusCode: 200
       };
     } catch (error) {
-
-      if(error instanceof ZodError){
+      if (error instanceof ZodError) {
         return {
           statusCode: 400,
-          body: error.errors.reduce((a,c) => {
-            a += `${c.path} - ${c.message}`
-            return a
-          },"")
-        }
+          body: JSON.stringify({
+            errors: error.errors.map(err => ({
+              path: err.path.join('.'),
+              message: err.message
+            }))
+          })
+        };
       }
 
       return {
-        body: "Something went wrong",
-        statusCode: 400
+        body: JSON.stringify({ error: `${error}` }),
+        statusCode: 500
       };
     }
   };
